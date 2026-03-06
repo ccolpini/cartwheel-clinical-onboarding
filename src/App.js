@@ -289,16 +289,18 @@ function CollapsibleSection({ title, summary, children, variant = "light" }) {
   );
 }
 
-function ProgressRing({ pct }) {
+function ProgressRing({ pct, light = false }) {
   const r = 28, circ = 2 * Math.PI * r, done = pct >= 100;
+  const trackColor = light ? "rgba(255,255,255,0.2)" : "rgba(177,165,247,0.25)";
+  const fillColor = light ? (done ? "#A7CF99" : "rgba(255,255,255,0.85)") : (done ? C.mint : C.lavender);
   return (
     <svg width={72} height={72}>
-      <circle cx={36} cy={36} r={r} fill="none" stroke="rgba(177,165,247,0.25)" strokeWidth={5} />
-      <circle cx={36} cy={36} r={r} fill="none" stroke={done ? C.mint : C.lavender} strokeWidth={5}
+      <circle cx={36} cy={36} r={r} fill="none" stroke={trackColor} strokeWidth={5} />
+      <circle cx={36} cy={36} r={r} fill="none" stroke={fillColor} strokeWidth={5}
         strokeDasharray={`${(pct / 100) * circ} ${circ}`} strokeDashoffset={circ / 4} strokeLinecap="round"
-        style={{ transition: "stroke-dasharray 0.5s ease", animation: done ? "ringPulse 2s ease infinite" : "" }} />
+        style={{ transition: "stroke-dasharray 0.5s ease" }} />
       <text x={36} y={41} textAnchor="middle" fontSize={13} fontWeight={700}
-        fontFamily="Montserrat,sans-serif" fill={done ? C.mint : C.lavender}>{pct}%</text>
+        fontFamily="Montserrat,sans-serif" fill={fillColor}>{pct}%</text>
     </svg>
   );
 }
@@ -570,6 +572,11 @@ export default function App() {
 }
 
 // ── HOME ──────────────────────────────────────────────────────────────────────
+const BLOCK = { padding: "36px 28px" };
+const BLOCK_LABEL = { fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 20 };
+const HR_DARK = <div style={{ height: 1, background: "rgba(255,255,255,0.12)", margin: "0" }} />;
+const HR_LIGHT = <div style={{ height: 1, background: "rgba(15,27,31,0.07)", margin: "0" }} />;
+
 function HomeTab({ checks, toggle, pct, done, user, fmtDate }) {
   const firstName = user.name.split(" ")[0];
   const [openJ, setOpenJ] = useState(null);
@@ -580,133 +587,113 @@ function HomeTab({ checks, toggle, pct, done, user, fmtDate }) {
   ];
   const journey = [
     { key: "a", phase: "Within 72 Hours", items: ["Complete Credentialing Survey", "Set up Rippling account"] },
-    { key: "b", phase: "2 Weeks Before", items: ["Clinical Schedule form", "State compliance", "Cultural Competency Training"] },
-    { key: "c", phase: "Before Start", items: ["I-9 (W2 only)", "Background check via Checkr", "Direct deposit setup"] },
+    { key: "b", phase: "2 Weeks Before Start", items: ["Clinical Schedule form", "State compliance", "Cultural Competency Training"] },
+    { key: "c", phase: "Before Your Start Date", items: ["I-9 (W2 only)", "Background check via Checkr", "Direct deposit setup"] },
     { key: "d", phase: "Day 1", items: ["Orientation at 11am EST", "Rippling trainings", "Connect with Clinical team"] },
   ];
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <FadeIn delay={0}>
-        <div style={{ background: `linear-gradient(135deg,${C.indigo},#2d3d85)`, borderRadius: 20, padding: "26px 28px", position: "relative", overflow: "hidden", boxShadow: "0 8px 32px rgba(57,75,153,0.22)" }}>
-          <div style={{ position: "absolute", top: -24, right: -24, width: 110, height: 110, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-          <div style={{ position: "absolute", bottom: -20, right: 60, width: 70, height: 70, background: "rgba(177,165,247,0.1)", transform: "rotate(20deg)", borderRadius: 8 }} />
-          <SectionLabel light>Welcome to the team, {firstName}</SectionLabel>
-          <p style={{ fontSize: 15, color: C.white, fontWeight: 600, fontFamily: "Montserrat,sans-serif", lineHeight: 1.6, marginBottom: 10 }}>
-            You're joining as a <span style={{ color: C.lavender }}>{user.role}</span> serving <span style={{ color: C.mint }}>{user.state}</span>.
-          </p>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75 }}>
-            {user.startDate && <span>Your start date is <strong style={{ color: C.mint }}>{fmtDate(user.startDate)}</strong>. </span>}
-            Bookmark this page — it's your single source of truth through onboarding.
-          </p>
-        </div>
-      </FadeIn>
+    <div style={{ display: "flex", flexDirection: "column", margin: "-36px -28px -64px" }}>
 
-      <FadeIn delay={60}>
-        <div style={{ background: C.brick, borderRadius: 16, padding: "20px 22px", boxShadow: "0 4px 16px rgba(92,30,55,0.18)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <AlertTriangle size={13} color={C.lightPeach} />
-            </div>
-            <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 13, color: C.white }}>Act Now — These Affect Your Start Date</span>
-          </div>
-          {urgentItems.map((item, i) => (
-            <div key={i} onClick={() => toggle(item.id)}
-              style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: i < urgentItems.length - 1 ? 12 : 0, cursor: "pointer", opacity: checks[item.id] ? 0.5 : 1 }}>
-              <div style={{
-                width: 20, height: 20, borderRadius: 5, flexShrink: 0, marginTop: 1,
-                border: `2px solid ${checks[item.id] ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)"}`,
-                background: checks[item.id] ? "rgba(255,255,255,0.25)" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s"
-              }}>
+      {/* ── MAROON: Welcome ── */}
+      <div style={{ background: C.brick, ...BLOCK, paddingTop: 48 }} className="fadeUp">
+        <div style={{ ...BLOCK_LABEL, color: "rgba(255,255,255,0.5)" }}>Welcome to the team</div>
+        <h1 style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 800, fontSize: 36, color: C.white, marginBottom: 12, lineHeight: 1.1 }}>{firstName}.</h1>
+        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.75, maxWidth: 540 }}>
+          You're joining as a <strong style={{ color: C.white }}>{user.role}</strong> serving <strong style={{ color: C.white }}>{user.state}</strong>.
+          {user.startDate && <span> Your start date is <strong style={{ color: C.white }}>{fmtDate(user.startDate)}</strong>.</span>}
+        </p>
+      </div>
+
+      {/* ── CREAM: Act Now ── */}
+      <div style={{ background: C.sand, ...BLOCK }} className="fadeUp">
+        <div style={{ ...BLOCK_LABEL, color: C.brick }}>Act Now — Delays Affect Your Start Date</div>
+        {urgentItems.map((item, i) => (
+          <div key={i}>
+            <div onClick={() => toggle(item.id)} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "16px 0", cursor: "pointer", opacity: checks[item.id] ? 0.45 : 1 }}>
+              <div style={{ width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1, border: `2px solid ${checks[item.id] ? C.brick : "rgba(92,30,55,0.35)"}`, background: checks[item.id] ? C.brick : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                 {checks[item.id] && <svg width={10} height={8} viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke={C.white} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 13, color: C.white, fontWeight: 600, textDecoration: checks[item.id] ? "line-through" : "none" }}>{item.text}</span>
-                  <span style={{ background: "rgba(255,255,255,0.12)", color: C.lightPeach, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>{item.deadline}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+                  <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 13, color: C.charcoal, textDecoration: checks[item.id] ? "line-through" : "none" }}>{item.text}</span>
+                  <span style={{ background: C.brick, color: C.white, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 3 }}>{item.deadline}</span>
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{item.note}</div>
+                <div style={{ fontSize: 12, color: C.taupe }}>{item.note}</div>
               </div>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+            {i < urgentItems.length - 1 && HR_LIGHT}
+          </div>
+        ))}
+      </div>
 
-      <FadeIn delay={100}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {journey.map(s => {
-            const isOpen = openJ === s.key;
-            return (
-              <div key={s.key} onClick={() => setOpenJ(isOpen ? null : s.key)}
-                style={{
-                  background: isOpen ? C.lavXLight : C.lightSky, borderRadius: 16, padding: "18px 20px",
-                  border: `1px solid ${isOpen ? "rgba(57,75,153,0.2)" : C.sky}`, cursor: "pointer", transition: "all 0.2s",
-                  boxShadow: isOpen ? "0 4px 16px rgba(57,75,153,0.1)" : "0 1px 4px rgba(15,27,31,0.05)"
-                }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isOpen ? 12 : 0 }}>
-                  <div style={{ display: "inline-block", background: "rgba(57,75,153,0.1)", borderRadius: 8, padding: "4px 10px" }}>
-                    <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 11, color: C.indigo }}>{s.phase}</span>
-                  </div>
-                  <ChevronDown size={15} color={C.indigo} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
-                </div>
-                <div style={{ maxHeight: isOpen ? "300px" : 0, overflow: "hidden", transition: "max-height 0.35s ease" }}>
+      {/* ── WHITE: Onboarding Path ── */}
+      <div style={{ background: C.white, ...BLOCK }} className="fadeUp">
+        <div style={{ ...BLOCK_LABEL, color: C.taupe }}>Your Onboarding Path</div>
+        {journey.map((s, i) => {
+          const isOpen = openJ === s.key;
+          return (
+            <div key={s.key}>
+              <div onClick={() => setOpenJ(isOpen ? null : s.key)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", cursor: "pointer" }}>
+                <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 14, color: C.charcoal }}>{s.phase}</span>
+                <ChevronDown size={14} color={C.brick} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+              </div>
+              <div style={{ maxHeight: isOpen ? "300px" : 0, overflow: "hidden", transition: "max-height 0.35s ease" }}>
+                <div style={{ paddingBottom: 16 }}>
                   {s.items.map((item, j) => (
-                    <div key={j} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: j < s.items.length - 1 ? 8 : 0, paddingTop: j === 0 ? 4 : 0 }}>
-                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.indigo, flexShrink: 0, marginTop: 5 }} />
-                      <span style={{ fontSize: 13, color: C.indigo, lineHeight: 1.5 }}>{item}</span>
+                    <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: j < s.items.length - 1 ? 8 : 0 }}>
+                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.brick, flexShrink: 0, marginTop: 6, opacity: 0.5 }} />
+                      <span style={{ fontSize: 13, color: "#4a5568", lineHeight: 1.55 }}>{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </FadeIn>
+              {i < journey.length - 1 && HR_LIGHT}
+            </div>
+          );
+        })}
+      </div>
 
-      <FadeIn delay={120}>
-        <SectionHead>Your First Week at Cartwheel</SectionHead>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {FIRST_WEEK.map((step, i) => (
-            <div key={i} style={{ background: C.white, borderRadius: 14, padding: "16px 18px", border: "1px solid rgba(15,27,31,0.08)", display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.lightSky, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 800, fontSize: 12, color: C.indigo }}>{step.num}</span>
-              </div>
+      {/* ── MAROON: First Week ── */}
+      <div style={{ background: C.brick, ...BLOCK }} className="fadeUp">
+        <div style={{ ...BLOCK_LABEL, color: "rgba(255,255,255,0.5)" }}>Your First Week at Cartwheel</div>
+        {FIRST_WEEK.map((step, i) => (
+          <div key={i}>
+            <div style={{ display: "flex", gap: 20, padding: "18px 0" }}>
+              <div style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 800, fontSize: 22, color: "rgba(255,255,255,0.2)", flexShrink: 0, width: 28, lineHeight: 1 }}>{step.num}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                  <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 13, color: C.charcoal }}>{step.title}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: `${step.badgeColor}22`, color: step.badgeColor }}>{step.badge}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 14, color: C.white }}>{step.title}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)" }}>{step.badge}</span>
                 </div>
                 {step.details.map((d, j) => (
-                  <div key={j} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: j < step.details.length - 1 ? 5 : 0 }}>
-                    <div style={{ width: 4, height: 4, borderRadius: "50%", background: C.taupe, flexShrink: 0, marginTop: 6 }} />
-                    <span style={{ fontSize: 12, color: C.taupe, lineHeight: 1.6 }}>{d}</span>
-                  </div>
+                  <p key={j} style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: j < step.details.length - 1 ? 4 : 0 }}>{d}</p>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+            {i < FIRST_WEEK.length - 1 && HR_DARK}
+          </div>
+        ))}
+      </div>
 
-      <FadeIn delay={160}>
-        <div style={{ background: C.lightMint, borderRadius: 16, padding: "20px 24px", border: `1px solid rgba(38,84,79,0.15)`, borderLeft: `3px solid ${C.forest}` }}>
-          <SectionLabel color={C.forest}>Your Onboarding Contacts</SectionLabel>
-          {[
-            { name: "Helen Contreras", role: "People Operations Associate", email: "helen@cartwheelcare.org", note: "General onboarding questions" },
-            { name: "Clinical Onboarding Team", role: "Clinical setup & compliance", email: "clinical.onboarding@cartwheelcare.org", note: "Schedule, state compliance, I-9" },
-            { name: "Credentialing Team", role: "Credentialing & payor enrollment", email: "Credentialing@cartwheelcare.org", note: "Survey, payor enrollment, status" },
-          ].map((ct, i, arr) => (
-            <div key={i}>
-              <div style={{ padding: "10px 0" }}>
-                <div style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 13, color: C.forest }}>{ct.name}</div>
-                <div style={{ fontSize: 12, color: C.forest, opacity: 0.7, marginTop: 1 }}>{ct.role} · {ct.note}</div>
-                <a href={`mailto:${ct.email}`} style={{ fontSize: 12, color: C.indigo, fontWeight: 600, marginTop: 3, display: "block" }}>{ct.email}</a>
-              </div>
-              {i < arr.length - 1 && <div style={{ height: 1, background: "rgba(38,84,79,0.1)" }} />}
+      {/* ── CREAM: Contacts ── */}
+      <div style={{ background: C.sand, ...BLOCK, paddingBottom: 80 }} className="fadeUp">
+        <div style={{ ...BLOCK_LABEL, color: C.taupe }}>Your Onboarding Contacts</div>
+        {[
+          { name: "Helen Contreras", role: "People Operations Associate", email: "helen@cartwheelcare.org", note: "General onboarding questions" },
+          { name: "Clinical Onboarding Team", role: "Clinical setup & compliance", email: "clinical.onboarding@cartwheelcare.org", note: "Schedule, state compliance, I-9" },
+          { name: "Credentialing Team", role: "Credentialing & payor enrollment", email: "Credentialing@cartwheelcare.org", note: "Survey, payor enrollment, status" },
+        ].map((ct, i, arr) => (
+          <div key={i}>
+            <div style={{ padding: "16px 0" }}>
+              <div style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 14, color: C.charcoal, marginBottom: 2 }}>{ct.name}</div>
+              <div style={{ fontSize: 12, color: C.taupe, marginBottom: 4 }}>{ct.role} · {ct.note}</div>
+              <a href={`mailto:${ct.email}`} style={{ fontSize: 12, color: C.brick, fontWeight: 700 }}>{ct.email}</a>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+            {i < arr.length - 1 && HR_LIGHT}
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }
@@ -727,15 +714,15 @@ function ChecklistTab({ checks, toggle, done, pct, user }) {
       <FadeIn delay={0}>
         <SectionHead>{firstName}'s Onboarding Checklist</SectionHead>
         <p style={{ fontSize: 14, color: "#4a5568", lineHeight: 1.75, marginBottom: 20 }}>Each phase has a deadline that affects your start date. Complete in order — don't let the credentialing survey slip past 72 hours.</p>
-        <div style={{ background: C.white, borderRadius: 16, padding: "20px 24px", display: "flex", gap: 20, alignItems: "center", marginBottom: 20, position: "relative", overflow: "hidden", border: "1px solid rgba(177,165,247,0.3)", boxShadow: "0 2px 16px rgba(57,75,153,0.07)" }}>
+        <div style={{ background: C.brick, borderRadius: 0, padding: "28px 24px", display: "flex", gap: 20, alignItems: "center", marginBottom: 20, position: "relative", overflow: "hidden", margin: "0 -28px 20px" }}>
           <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
-          <ProgressRing pct={pct} />
+          <ProgressRing pct={pct} light />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 15, color: C.charcoal, marginBottom: 6 }}>{done} of {ALL_IDS.length} tasks complete</div>
-            <div style={{ background: "rgba(177,165,247,0.18)", borderRadius: 99, height: 6 }}>
-              <div style={{ background: pct === 100 ? `linear-gradient(90deg,${C.mint},${C.forest})` : `linear-gradient(90deg,${C.lavender},${C.indigo})`, borderRadius: 99, height: 6, width: `${pct}%`, transition: "width 0.4s ease" }} />
+            <div style={{ fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: 15, color: C.white, marginBottom: 6 }}>{done} of {ALL_IDS.length} tasks complete</div>
+            <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 99, height: 5 }}>
+              <div style={{ background: pct === 100 ? "#A7CF99" : "rgba(255,255,255,0.7)", borderRadius: 99, height: 5, width: `${pct}%`, transition: "width 0.4s ease" }} />
             </div>
-            {pct === 100 && <div className="fadeUp" style={{ fontSize: 12, fontWeight: 600, color: C.forest, marginTop: 6 }}>You're fully onboarded. Welcome to the team!</div>}
+            {pct === 100 && <div className="fadeUp" style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginTop: 6 }}>You're fully onboarded. Welcome to the team!</div>}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
